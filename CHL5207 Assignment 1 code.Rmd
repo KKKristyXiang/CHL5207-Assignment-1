@@ -1,0 +1,91 @@
+---
+title: "CHL5207 Assignment 1"
+author: "Feifan Xiang - 1006533921"
+output:
+  pdf_document: default
+  latex_engine: xelatex
+header-includes:
+    - \usepackage{setspace}\doublespacing
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lme4)
+library(knitr)
+library(jtools)
+```
+
+## Data
+
+The dataset used in this study, Rateprof.csv, provides information regarding the average and standard deviation of ratings for instructors at a large American university. The ratings consist of quality, helpfulness, clarity, easiness of the instructor’s courses and rater interest (raterInterest) in that subject matter. The average and standard deviation of ratings are continuous variables and use the scale from 1(low) to 5(high). It also contains the number of years(numYears), the number of raters(numRaters) and the number of courses(numCourses) the instructor had over the period from 1999 to 2009. Additionally, the dataset contains the following 3 categorical variables, the gender(male or female), the physically attractiveness(pepper: yes or no) and the discipline(humanities, social science, pre-professional and STEM) of the instructor.
+
+In total, there are 366 observations, 17 variables and there are no missing values for any variables in our dataset.
+
+
+## Method
+For this report, our primary goals are to investigate how the five ratings, quality, helpfulness, clarity, easiness and raterInterest, are related. Moreover, we want to model the relationship of the quality rating (quality) using the following variables gender, numYears, discipline, easiness, raterInterest and pepper, and find statistically significant predictors related to quality at the 0.05 level of significance. Furthermore, we want to know how quality varies by discipline.
+
+Since all 5 rating criteria are continuous variables, we checked the correlations and generated a correlation heatmap, Figure1, to check their relatedness. For the modeling part, we applied multiple linear regression because the outcome, quality, is a continuous variable. We also used residual plot and Q-Q plot to check for linearity, independence, homoscedasticity and normality assumptions for this linear model. For checking the significant predictors in our model, we compared their p-values with 0.05. To find out how quality varies by discipline, we checked its estimated coefficient from the model output.
+
+
+## Analysis
+
+
+
+```{r, include = FALSE}
+data <- read.csv("Rateprof.csv")
+head(data)
+colSums(is.na(data))
+ratings <- data[c('quality', 'helpfulness', 'clarity', 'easiness', 'raterInterest')]
+# (1)
+
+# install.packages('corrplot')
+library(corrplot)
+
+# Calculate the correlation matrix
+cor_matrix <- cor(ratings)
+cor_matrix
+```
+
+
+```{r, echo = FALSE}
+# Visualize the correlation matrix using corrplot
+corrplot(cor_matrix, method='shade', addCoef.col = TRUE, tl.cex = 0.8, mar=c(0,0,2,0), cex.main = 0.9, title = "Figure 1: The Correlation Matrix for Ratings")
+```
+Based on Figure 1, all variables have positive correlations. Quality, helpfulness and clarity are highly correlated (over 0.9 correlation), easiness and raterInterest have moderate correlations with those 3 variables respectively. Furthermore, easiness and raterInterest are weakly correlated (0.21). 
+
+
+\newpage
+```{r, echo = FALSE}
+
+library(knitr)
+
+# fitting a linear regression model on training data
+
+m <- lm(quality ~ factor(gender) + numYears + factor(discipline) + easiness + raterInterest + factor(pepper), data = data)
+
+kable(round(summary(m)$coef, 4), caption = "Summary of Multiple Linear Model Fit")
+
+```
+
+From the residual vs fitted value plot and Q-Q plot, the linear model assumptions are roughly met with minor deviations at the end points. The multiple linear regression model fit is summarized in Table 1, containing the estimated coefficients, standard error, test statistics and p-values for the intercept and predictors. The variables discipline[STEM], easiness, raterInterest and pepper[yes] all have p-values less than 0.05, which indicate that they are statistically significant predictors related to quality at the 0.05 level of significance.
+
+From Table 1, all variables except for the intercept term have positive coefficients with the outcome variable quality rating. For our variable of interest, discipline, with humanities as the baseline, while keeping other variables constant, on average, if the instructor is from the pre-professional discipline, they have 0.1 higher quality rating, if the instructor is from the social science discipline, they have 0.02 higher quality score and if they are from the STEM discipline, they have 0.29 higher rating scores comparing with those from the humanities discipline.
+
+## Appendix
+
+All analysis in this report were done in R Studio. \
+The link to this R Markdown file and the dataset Rateprof.csv can be found at:\
+[https://github.com/KKKristyXiang/CHL5207-Assignment-1]
+
+```{r, include = FALSE}
+
+### checking the model assumptions
+
+# Normal Q-Q plot to check for normality of residuals
+qqnorm(rstudent(m))
+qqline(rstudent(m))
+
+# residual plot
+plot(m, which = 1)
+```
